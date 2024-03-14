@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.9;
 
-import '@open-ibc/vibc-core-smart-contracts/contracts/libs/Ibc.sol';
-import '@open-ibc/vibc-core-smart-contracts/contracts/interfaces/IbcReceiver.sol';
-import '@open-ibc/vibc-core-smart-contracts/contracts/interfaces/IbcDispatcher.sol';
-import '@open-ibc/vibc-core-smart-contracts/contracts/interfaces/ProofVerifier.sol';
+import "@open-ibc/vibc-core-smart-contracts/contracts/libs/Ibc.sol";
+import "@open-ibc/vibc-core-smart-contracts/contracts/interfaces/IbcReceiver.sol";
+import "@open-ibc/vibc-core-smart-contracts/contracts/interfaces/IbcDispatcher.sol";
+import "@open-ibc/vibc-core-smart-contracts/contracts/interfaces/ProofVerifier.sol";
 
 // CustomChanIbcApp is a contract that can be used as a base contract
 // for IBC-enabled contracts that send packets over a custom IBC channel.
@@ -16,17 +16,17 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
     AckPacket[] public ackPackets;
     // received timeout packet as chain A
     IbcPacket[] public timeoutPackets;
-    
+
     struct ChannelMapping {
         bytes32 channelId;
         bytes32 cpChannelId;
     }
-    
+
     // ChannelMapping array with the channel IDs of the connected channels
     ChannelMapping[] public connectedChannels;
 
     // add supported versions (format to be negotiated between apps)
-    string[] supportedVersions = ['1.0'];
+    string[] supportedVersions = ["1.0"];
 
     constructor(IbcDispatcher _dispatcher) IbcReceiverBase(_dispatcher) {}
 
@@ -42,7 +42,7 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
         supportedVersions = _supportedVersions;
     }
 
-    /** 
+    /**
      * @dev Implement a function to send a packet that calls the dispatcher.sendPacket function
      *      It has the following function handle:
      *          function sendPacket(bytes32 channelId, bytes calldata payload, uint64 timeoutTimestamp) external;
@@ -51,10 +51,15 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
     /**
      * @dev Packet lifecycle callback that implements packet receipt logic and returns and acknowledgement packet.
      *      MUST be overriden by the inheriting contract.
-     * 
+     *
      * @param packet the IBC packet encoded by the source and relayed by the relayer.
      */
-    function onRecvPacket(IbcPacket memory packet) external virtual onlyIbcDispatcher returns (AckPacket memory ackPacket) {
+    function onRecvPacket(IbcPacket memory packet)
+        external
+        virtual
+        onlyIbcDispatcher
+        returns (AckPacket memory ackPacket)
+    {
         recvedPackets.push(packet);
         // do logic
         return AckPacket(true, abi.encodePacked('{ "account": "account", "reply": "got the message" }'));
@@ -63,11 +68,15 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
     /**
      * @dev Packet lifecycle callback that implements packet acknowledgment logic.
      *      MUST be overriden by the inheriting contract.
-     * 
+     *
      * @param packet the IBC packet encoded by the source and relayed by the relayer.
      * @param ack the acknowledgment packet encoded by the destination and relayed by the relayer.
      */
-    function onAcknowledgementPacket(IbcPacket calldata packet, AckPacket calldata ack) external virtual onlyIbcDispatcher {
+    function onAcknowledgementPacket(IbcPacket calldata packet, AckPacket calldata ack)
+        external
+        virtual
+        onlyIbcDispatcher
+    {
         ackPackets.push(ack);
         // do logic
     }
@@ -76,7 +85,7 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
      * @dev Packet lifecycle callback that implements packet receipt logic and return and acknowledgement packet.
      *      MUST be overriden by the inheriting contract.
      *      NOT SUPPORTED YET
-     * 
+     *
      * @param packet the IBC packet encoded by the counterparty and relayed by the relayer
      */
     function onTimeoutPacket(IbcPacket calldata packet) external virtual onlyIbcDispatcher {
@@ -96,12 +105,11 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
     function createChannel(
         CounterParty calldata local,
         uint8 ordering,
-        bool feeEnabled, 
-        string[] calldata connectionHops, 
-        CounterParty calldata counterparty, 
+        bool feeEnabled,
+        string[] calldata connectionHops,
+        CounterParty calldata counterparty,
         Ics23Proof calldata proof
-        ) external virtual onlyOwner{
-
+    ) external virtual onlyOwner {
         dispatcher.openIbcChannel(
             IbcChannelReceiver(address(this)),
             local,
@@ -130,21 +138,20 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
          * In both cases, the selected version should be in the supported versions list.
          */
         bool foundVersion = false;
-        selectedVersion = keccak256(abi.encodePacked(version)) == keccak256(abi.encodePacked(''))
-            ? counterparty.version
-            : version;
+        selectedVersion =
+            keccak256(abi.encodePacked(version)) == keccak256(abi.encodePacked("")) ? counterparty.version : version;
         for (uint256 i = 0; i < supportedVersions.length; i++) {
             if (keccak256(abi.encodePacked(selectedVersion)) == keccak256(abi.encodePacked(supportedVersions[i]))) {
                 foundVersion = true;
                 break;
             }
         }
-        require(foundVersion, 'Unsupported version');
+        require(foundVersion, "Unsupported version");
         // if counterpartyVersion is not empty, then it must be the same foundVersion
-        if (keccak256(abi.encodePacked(counterparty.version)) != keccak256(abi.encodePacked(''))) {
+        if (keccak256(abi.encodePacked(counterparty.version)) != keccak256(abi.encodePacked(""))) {
             require(
                 keccak256(abi.encodePacked(counterparty.version)) == keccak256(abi.encodePacked(selectedVersion)),
-                'Version mismatch'
+                "Version mismatch"
             );
         }
 
@@ -153,11 +160,11 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
         return selectedVersion;
     }
 
-    function onConnectIbcChannel(
-        bytes32 channelId,
-        bytes32 counterpartyChannelId,
-        string calldata counterpartyVersion
-    ) external virtual onlyIbcDispatcher {
+    function onConnectIbcChannel(bytes32 channelId, bytes32 counterpartyChannelId, string calldata counterpartyVersion)
+        external
+        virtual
+        onlyIbcDispatcher
+    {
         // ensure negotiated version is supported
         bool foundVersion = false;
         for (uint256 i = 0; i < supportedVersions.length; i++) {
@@ -166,14 +173,12 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
                 break;
             }
         }
-        require(foundVersion, 'Unsupported version');
+        require(foundVersion, "Unsupported version");
 
         // do logic
 
-        ChannelMapping memory channelMapping = ChannelMapping({
-            channelId: channelId,
-            cpChannelId: counterpartyChannelId
-        });
+        ChannelMapping memory channelMapping =
+            ChannelMapping({channelId: channelId, cpChannelId: counterpartyChannelId});
         connectedChannels.push(channelMapping);
     }
 
@@ -190,7 +195,7 @@ contract CustomChanIbcApp is IbcReceiverBase, IbcReceiver {
                 break;
             }
         }
-        require(channelFound, 'Channel not found');
+        require(channelFound, "Channel not found");
 
         // do logic
     }
