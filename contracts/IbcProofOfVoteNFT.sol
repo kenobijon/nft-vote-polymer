@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 // import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./base/CustomChanIbcApp.sol";
 
-contract IbcProofOfVoteNFT is CustomChanIbcApp {
+contract IbcProofOfVoteNFT is ERC721, CustomChanIbcApp {
     uint256 public currentTokenId;
 
     string public tokenURIPolyVote;
 
     constructor(IbcDispatcher _dispatcher, string memory _tokenURIPolyVote)
-        // ERC721("PolyVoter", "POLYV")
+        ERC721("PolyVoter", "POLYV")
         CustomChanIbcApp(_dispatcher)
     {
         tokenURIPolyVote = _tokenURIPolyVote;
@@ -20,19 +21,19 @@ contract IbcProofOfVoteNFT is CustomChanIbcApp {
     function mint(address recipient) public returns (uint256) {
         currentTokenId += 1;
         uint256 tokenId = currentTokenId;
-        // _safeMint(recipient, tokenId);
+        _safeMint(recipient, tokenId);
         return tokenId;
     }
 
-    // function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-    //     require(tokenId <= currentTokenId, "ERC721Metadata: URI query for nonexistent token");
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        require(tokenId <= currentTokenId, "ERC721Metadata: URI query for nonexistent token");
 
-    //     return tokenURIPolyVote;
-    // }
+        return tokenURIPolyVote;
+    }
 
-    // function updateTokenURI(string memory _newTokenURI) public {
-    //     tokenURIPolyVote = _newTokenURI;
-    // }
+    function updateTokenURI(string memory _newTokenURI) public {
+        tokenURIPolyVote = _newTokenURI;
+    }
 
     event NFTAckReceived(address voter, address recipient, uint256 voteId);
 

@@ -81,6 +81,16 @@ do-it:
     just send-packet optimism
     echo "You've done it!"
 
+
+test-vote:
+    echo "Running the full E2E flow..."
+    just set-contracts optimism IbcBalot false && just set-contracts base IbcProofOfVote false
+    just deploy optimism base
+    just sanity-check
+    just create-channel
+    just send-packet optimism
+    echo "You've done it!"
+
 # Clean up the environment by removing the artifacts and cache folders and running the forge clean command
 # Usage: just clean
 clean:
