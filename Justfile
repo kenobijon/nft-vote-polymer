@@ -62,6 +62,10 @@ send-packet SOURCE:
     echo "Sending a packet with the values from the config..."
     node scripts/private/_send-packet-config.js {{SOURCE}}
 
+send-vote SOURCE:
+    echo "Sending a packet with the values from the config..."
+    node scripts/private/_send-vote-config.js {{SOURCE}}
+
 # Switch between the sim client and the client with proofs
 # Usage: just switch-client
 switch-client:
@@ -72,7 +76,7 @@ switch-client:
 
 # Run the full E2E flow by setting the contracts, deploying them, creating a channel, and sending a packet
 # Usage: just do-it
-do-it:
+do-it UNIVERSAL='false':
     echo "Running the full E2E flow..."
     just set-contracts optimism XCounter false && just set-contracts base XCounter false
     just deploy optimism base
@@ -81,14 +85,21 @@ do-it:
     just send-packet optimism
     echo "You've done it!"
 
+deploy-ballot CHAIN:
+    npx hardhat run scripts/deployBallot.js --network {{CHAIN}}
 
-test-vote:
+deploy-nft CHAIN:
+    npx hardhat run scripts/deployNFTVote.js --network {{CHAIN}}
+
+
+nft-do-it UNIVERSAL='false':
     echo "Running the full E2E flow..."
-    just set-contracts optimism IbcBalot false && just set-contracts base IbcProofOfVote false
-    just deploy optimism base
+    just set-contracts optimism IbcBallot false && just set-contracts base IbcProofOfVoteNFT false
+    npx hardhat run scripts/deployBallot.js --network optimism
+    npx hardhat run scripts/deployNFTVote.js --network base 
     just sanity-check
     just create-channel
-    just send-packet optimism
+    just send-vote optimism
     echo "You've done it!"
 
 # Clean up the environment by removing the artifacts and cache folders and running the forge clean command

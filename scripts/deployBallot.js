@@ -13,7 +13,7 @@ async function main() {
         "0x506f6c796d6572206272696e67732049424320746f20457468657265756d0000",
         "0x506f6c796d6572206272696e67732049424320746f20616c6c206f6620746800",
     ];
-    const ibcBallot = await IbcBallot.deploy(proposalNames, process.env.OP_DISPATCHER);
+    const ibcBallot = await IbcBallot.deploy(proposalNames, process.env.OP_DISPATCHER_SIM);
 
     console.log("IbcBallot address:", ibcBallot.target);
     const tokenURI =

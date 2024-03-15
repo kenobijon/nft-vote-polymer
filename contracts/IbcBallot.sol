@@ -143,7 +143,6 @@ contract IbcBallot is CustomChanIbcApp {
      */
     function sendMintNFTMsg(bytes32 channelId, uint64 timeoutSeconds, address voterAddress, address recipient)
         external
-        payable
     {
         require(voters[voterAddress].ibcNFTMinted == false, "Already has a ProofOfVote NFT minted on counterparty");
 
