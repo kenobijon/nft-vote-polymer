@@ -1,6 +1,6 @@
-# ⛓️🔗⛓️ Template for IBC enabled Solidity contracts
+# ⛓️🔗⛓️ NFT Voting for IBC enabled Solidity contracts
 
-This repo provides a starter project to build [IBC](https://github.com/cosmos/ibc) enabled Solidity contracts that connect rollups to one another Polymer Hub, through the [vIBC core contracts](https://github.com/open-ibc/vibc-core-smart-contracts).
+This repo is based off the starter project to build [IBC](https://github.com/cosmos/ibc) enabled Solidity contracts that connect rollups to one another Polymer Hub, through the [vIBC core contracts](https://github.com/open-ibc/vibc-core-smart-contracts).
 
 The repository is a _GitHub template_ repository so you can click "Use this template" to create your own project repository without having the entire commit history of the template.
 
@@ -75,27 +75,15 @@ The account associated with your private key must have both Base Sepolia and Opt
 
 ## 🏃🏽🏃🏻‍♀️ Quickstart
 
-The project comes with a built-in dummy application called x-counter (which syncrhonizes a counter across two contracts on remote chains). You can find the contracts in the `/contracts` directory as XCounterUC.sol and XCounter.sol (the former when using the universal channel, the latter when creating a custom IBC channel).
+The project adds two smart contracts IbcBallot and IbcProofOfVoteNFT which enables functionality to vote on one chain, and then send a packet providing the proof of vote and mints and NFT on the destination chain. 
 
-### Universal channels
+### Setup
 
-The easiest way to get onboarded is to use Universal channels. A universal channel is an IBC channel where the port is owned by Polymer's Universal channel middleware contracts on each chain.
-
-When a user deploys a Universal channel compatible contract (this means inheriting the [UniversalChanIbcApp](./contracts/base/UniversalChanIbcApp.sol) base contract), it will be able to connect to the Universal Channel middleware, define Universal packets which will then be wrapped into an IBC packet by the Universal Channel Handler and unwrapped by its counterpart on the destination chain (rollup). The Universal channel middleware on the destination will then unwrap the IBC packet and send the data through to you application on the destination.
-
-Find out more about uinversal channels in the [documenation](https://docs.polymerlabs.org/docs/build/ibc-solidity/universal-channel).
-
-The configuration file that comes as default in the template repository, allows to quickly send a packet by running:
-
-```sh
-just send-packet base
 ```
-
-To send a packet between the XCounterUC contract on Base Sepolia to OP Sepolia and vice versa.
-
-You can find the universal channel middleware details [in the documentation](https://docs.polymerlabs.org/docs/build/supp-networks).
-
-Check if the packet got through on the [Polymer IBC explorer](https://sepolia.polymer.zone/packets).
+git clone https://github.com/kenobijon/nft-vote-polymer.git
+cd nft-vote-polymer
+just install
+```
 
 ### Custom IBC channel
 
@@ -107,19 +95,21 @@ Run the following command to go through a full E2E sweep of the project, using t
 
 ```bash
 # Usage: just do-it
-just do-it
+just nft-do-it
 ```
 
 It does the following under the hood:
 ```bash
 # Run the full E2E flow by setting the contracts, deploying them, creating a channel, and sending a packet
 # Usage: just do-it
-do-it:
+nft-do-it UNIVERSAL='false':
     echo "Running the full E2E flow..."
-    just set-contracts optimism XCounter false && just set-contracts base XCounter false
-    just deploy optimism base
+    just set-contracts optimism IbcBallot false && just set-contracts base IbcProofOfVoteNFT false
+    npx hardhat run scripts/deployBallot.js --network optimism
+    npx hardhat run scripts/deployNFTVote.js --network base 
+    just sanity-check
     just create-channel
-    just send-packet optimism
+    just send-vote optimism
     echo "You've done it!"
 ```
 
@@ -176,27 +166,14 @@ to deploy _MyContract_ artefact to the Optimism (Sepolia) chain.
 
 > **IMPORTANT**: This is where you set if your contract uses universal or custom channels. Make sure this corresponds to the base contract you've inherited from when developing your application (UniversalChanIbcApp or CustomChanIbcApp).
 
-#### Constructor arguments
-
-By default any application inheriting a base IBC application contract will need a dispatcher or universal channel handler address passed into the constructor. Obviously you might have other constructor arguments you may want to add. To still make use of the `just deploy source destination` recipe, add your arguments to the arguments.js file
-
-```javascript title="/contracts/arguments.js"
-module.exports = {
-    "XCounter": [],
-    "XCounterUC": [],
-    // Add your contract types here, along with the list of custom constructor arguments
-    // DO NOT ADD THE DISPATCHER OR UNIVERSAL CHANNEL HANDLER ADDRESSES HERE!!!
-    // These will be added in the deploy script at $ROOT/scripts/deploy.js
-};
-```
-
-#### Finally: deploy
+#### Deploy
 
 Then run:
 
 ```bash
 # Usage: just deploy [source] [destination]
-just deploy optimism base
+just deploy-ballot optimism
+just deploy-nft base
 ```
 
 where the script will automatically detect whether you are using custom or universal IBC channels.
@@ -227,13 +204,13 @@ The script will take the output of the channel creation and update the config fi
 
 Check out the [channel tab in the explorer](https://sepolia.polymer.zone/channels) to find out if the correct channel-id's related to your contracts were updated in the config.
 
-### Send packets
+### Send Vote packets
 
 Finally Run:
 
 ```bash
 # Usage: just send-packet
-just send-packet optimism 
+just send-vote optimism 
 ```
 
 to send a packet over a channel (script looks at the config's isUniversal flag to know if it should use the custom or universal packet). You can pick either optimism or base to send the packet from.
