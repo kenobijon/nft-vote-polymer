@@ -36,6 +36,10 @@ deploy SOURCE DESTINATION:
         echo "Deploying contracts with Hardhat..."
         node scripts/private/_deploy-config.js {{SOURCE}} {{DESTINATION}}
 
+deploy-nft-ballot SOURCE DESTINATION:
+        echo "Deploying contracts with Hardhat..."
+        node scripts/private/_deploy-nft-config.js {{SOURCE}} {{DESTINATION}}
+        
 # Run the sanity check script to verify that configuration (.env) files match with deployed contracts' stored values
 # Usage: just sanity-check
 sanity-check:
@@ -95,8 +99,7 @@ deploy-nft CHAIN:
 nft-do-it UNIVERSAL='false':
     echo "Running the full E2E flow..."
     just set-contracts optimism IbcBallot false && just set-contracts base IbcProofOfVoteNFT false
-    npx hardhat run scripts/deployBallot.js --network optimism
-    npx hardhat run scripts/deployNFTVote.js --network base 
+    just deploy-nft-ballot optimism base
     just sanity-check
     just create-channel
     just send-vote optimism
